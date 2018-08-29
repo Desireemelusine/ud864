@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      html,
+      body {
+        font-family: Arial, sans-serif;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+
+      #map {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script type="text/javascript">
+      var map;
+      // criamos um marcador array para que entrem todos os var locations
+      var markers = [];
+
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 38.736946, lng: -9.142685},
+          zoom: 15
+        });
+        /// para criar vários pontos
+        var locations = [
+          {title: 'Cascais', location: {lat:38.6979000, lng: -9.4214600}},
+          {title: 'Setúbal', location: {lat:38.526044, lng: -8.890933}},
+          {title: 'Lisboa', location: {lat:38.7222524, lng: -9.1393366}},
+          {title: 'Oeiras', location: {lat:38.696861, lng: -9.314601}}
+        ];
+
+        var largeInfoWindow = new google.maps.InfoWindow();
+        // to adjust everything on the view
+        var bounds = new google.maps.LatLngBounds();
+
+        for (var i = 0; i < locations.length; i++) {
+            // get index postition from each
+            var position = locations[i].location;
+            // get index title from each
+            var title = locations[i].title;
+            // make marker from each
+            var marker = new google.maps.Marker({
+              map: map,
+              position: position,
+              title: title,
+              animation: google.maps.Animation.DROP,
+              id: i
+            });
+            // extraimos todos os marcadores do array
+            markers.push(marker);
+
+            //extend the boundaries of the map for each marker postition
+            bounds.extend(markers[i].position);
+
+            // criamos um add addListener com propriedade
+            marker.addListener('click',function(){
+              populateInfoWindow(this, largeInfoWindow);
+            });
+          }
+        // fit into the maps
+        map.fitBounds(bounds);
+      }
+        /* A novidade aqui o populate window. Ou seja,  quando temos um array de markers a
+        melhor coisa a fazer e implementar tudo isso de uma vez através de uma função ( como parametros
+      será o marker e o infoWindow)
+        */
+      function populateInfoWindow(marker,infowindow){
+        // se infoWindow.marker != marker is not already opened on this marker, then.
+        if (infowindow.marker != marker) {
+          infowindow.marker = marker;
+          infowindow.setContent('<div>' + marker.title + '</div>');
+          infowindow.open(map, marker);
+          infowindow.addListener('closeclick', function() {
+            infowindow.setMarker(null);
+          });
+        }
+      }
+
+        /* somente para um ponto
+        var cascais = {lat:38.6979000, lng: -9.4214600};
+        var marker = new google.maps.Marker({
+          position: cascais,
+          map: map,
+          title: 'Cascais'
+        });
+        var infoWindow = new google.maps.InfoWindow({
+          content: "Nice beaches!Let´s go there on Saturday!"
+        });
+        marker.addListener('click',function(){
+          infoWindow.open(map, marker);
+        });
+        */
+
+    </script>
+    <script async defer
+
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0dcuJyRJYeOl5CqAerCyoi1hkitGF3HY&callback=initMap" type="text/javascript"></script>
+    </script>
+  </body>
+</html>
