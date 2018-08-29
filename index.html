@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <style>
-      html,
-      body {
-        font-family: Arial, sans-serif;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-
-      #map {
-        height: 100%;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css?family=Forum|Poiret+One" rel="stylesheet">
   </head>
   <body>
+    <div class="container">
+      <div class="option-box">
+        <h1>What to do in Lisbon during 3 days and a half!</h1>
+        <p>So you will arrive alone on a Thursday night and have no idea what to do?</p>
+        <span>Let me help you!</span>
+        <div>
+          <input id="showListings" type="button" value="show listings">
+          <input id="hideListings" type="button" value="hide listings">
+        </div>
+      </div>
+    </div>
     <div id="map"></div>
     <script type="text/javascript">
       var map;
@@ -29,42 +29,45 @@
         });
         /// para criar vários pontos
         var locations = [
-          {title: 'Cascais', location: {lat:38.6979000, lng: -9.4214600}},
-          {title: 'Setúbal', location: {lat:38.526044, lng: -8.890933}},
-          {title: 'Lisboa', location: {lat:38.7222524, lng: -9.1393366}},
-          {title: 'Oeiras', location: {lat:38.696861, lng: -9.314601}}
+          {title: 'Thursday Night', text: 'a', location: {lat:38.6979000, lng: -9.4214600}},
+          {title: 'Friday Morning', text: 'a', location: {lat:38.526044, lng: -8.890933}},
+          {title: 'Friday Night', text: 'a',  location: {lat:38.7222524, lng: -9.1393366}},
+          {title: 'Saturday Morning', text: 'a', location: {lat:38.696861, lng: -9.314601}},
+          {title: 'Saturday Night', text: 'a', location: {lat:38.6333308, lng: -9.22166578}},
+          {title: 'Sunday', text: 'a', location: {lat:38.8029, lng: -9.3817}}
         ];
 
         var largeInfoWindow = new google.maps.InfoWindow();
-        // to adjust everything on the view
-        var bounds = new google.maps.LatLngBounds();
 
         for (var i = 0; i < locations.length; i++) {
             // get index postition from each
             var position = locations[i].location;
             // get index title from each
             var title = locations[i].title;
+            // get index text from each
+            var text = locations[i].text;
             // make marker from each
             var marker = new google.maps.Marker({
-              map: map,
               position: position,
               title: title,
+              text: text,
               animation: google.maps.Animation.DROP,
               id: i
             });
             // extraimos todos os marcadores do array
             markers.push(marker);
 
-            //extend the boundaries of the map for each marker postition
-            bounds.extend(markers[i].position);
+
 
             // criamos um add addListener com propriedade
             marker.addListener('click',function(){
               populateInfoWindow(this, largeInfoWindow);
             });
           }
-        // fit into the maps
-        map.fitBounds(bounds);
+
+
+        document.getElementById('showListings').addEventListener('click', showListings);
+        document.getElementById('hideListings').addEventListener('click', hideListings);
       }
         /* A novidade aqui o populate window. Ou seja,  quando temos um array de markers a
         melhor coisa a fazer e implementar tudo isso de uma vez através de uma função ( como parametros
@@ -74,7 +77,8 @@
         // se infoWindow.marker != marker is not already opened on this marker, then.
         if (infowindow.marker != marker) {
           infowindow.marker = marker;
-          infowindow.setContent('<div>' + marker.title + '</div>');
+          infowindow.setContent('<div>' + marker.title + '<p>' + marker.text + '</p></div>');
+          //infowindow.setContent('<p>' + marker.text + '</p>');
           infowindow.open(map, marker);
           infowindow.addListener('closeclick', function() {
             infowindow.setMarker(null);
@@ -82,24 +86,27 @@
         }
       }
 
-        /* somente para um ponto
-        var cascais = {lat:38.6979000, lng: -9.4214600};
-        var marker = new google.maps.Marker({
-          position: cascais,
-          map: map,
-          title: 'Cascais'
-        });
-        var infoWindow = new google.maps.InfoWindow({
-          content: "Nice beaches!Let´s go there on Saturday!"
-        });
-        marker.addListener('click',function(){
-          infoWindow.open(map, marker);
-        });
-        */
+      function showListings(){
+        // to adjust everything on the view
+        var bounds = new google.maps.LatLngBounds();
+        for (var i = 0; i < markers.length; i++) {
+          markers[i].setMap(map);
+          //extend the boundaries of the map for each marker postition
+          bounds.extend(markers[i].position);
+        }
+        // fit into the maps
+        map.fitBounds(bounds);
+      }
 
-    </script>
+      function hideListings(){
+        // loop through the list and hide them all NULL
+        for (var i = 0; i < markers.length; i++) {
+          markers[i].setMap(null);
+        }
+      }
+
+  </script>
     <script async defer
-
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0dcuJyRJYeOl5CqAerCyoi1hkitGF3HY&callback=initMap" type="text/javascript"></script>
     </script>
   </body>
