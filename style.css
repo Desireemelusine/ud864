@@ -19,6 +19,14 @@ h1 {
   text-align: center;
 }
 
+h3 {
+  font-family: 'Poiret One', cursive;
+  color: #525454;
+  font-size: 2em;
+  margin: 0 0 10px 0;
+  text-align: center;
+}
+
 p {
   font-family: 'Forum', cursive;
   color: #525454;
@@ -49,6 +57,11 @@ span {
   width: 48%;
 }
 
+#toggle-drawing {
+  width: 27%;
+  position: relative;
+  margin-left: 10px;
+}
 
 .container {
   height: 100%;

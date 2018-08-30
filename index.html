@@ -13,6 +13,9 @@
         <div>
           <input id="showListings" type="button" value="show listings">
           <input id="hideListings" type="button" value="hide listings">
+          <hr>
+          <p class="text">Draw a shape to search within it for areas you would like to visit!</p>
+          <input id="toggle-drawing" type="button" value="Drawing Tools">
         </div>
       </div>
     </div>
@@ -22,22 +25,81 @@
       // criamos um marcador array para que entrem todos os var locations
       var markers = [];
 
+      //this global polygon ensures only one polygon is rendered
+      var polygon = null;
+
       function initMap() {
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: 38.736946, lng: -9.142685},
-          zoom: 15
-        });
-        /// para criar vários pontos
-        var locations = [
-          {title: 'Thursday Night', text: 'a', location: {lat:38.6979000, lng: -9.4214600}},
-          {title: 'Friday Morning', text: 'a', location: {lat:38.526044, lng: -8.890933}},
-          {title: 'Friday Night', text: 'a',  location: {lat:38.7222524, lng: -9.1393366}},
-          {title: 'Saturday Morning', text: 'a', location: {lat:38.696861, lng: -9.314601}},
-          {title: 'Saturday Night', text: 'a', location: {lat:38.6333308, lng: -9.22166578}},
-          {title: 'Sunday', text: 'a', location: {lat:38.8029, lng: -9.3817}}
+        var styles = [
+              {
+                featureType: 'water',
+                //elementType: 'geometry.fill',
+                stylers: [{color: '#78d0d1'}]
+              },
+              {
+              featureType: 'road.highway',
+              elementType: 'geometry',
+              stylers: [{color: '#ebdbbf'}]
+            },
+            {
+                featureType: 'poi',
+                elementType: 'geometry',
+                stylers: [{color: '#5cc977'}]
+              },
+            {
+              featureType: 'administrative.locality',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#cc8800'}]
+            },
+            {
+              featureType: 'transit.station',
+              elementType: 'labels.text.fill',
+              stylers: [{color: '#d59563'}]
+            }
         ];
 
+        // Constructor creates a new map - only center and zoom are required.
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: {lat: 38.736946, lng: -9.142685},
+          zoom: 15,
+          styles: styles,
+          mapTypeControl: false
+        });
+
+
+        /// para criar vários pontos
+        var locations = [
+          {title: 'Thursday Night', text1: 'Casa Portuguesa | Tapas & Conversa . Rua Alegria,23 1300', text2:'A big table, no cell phone allowed, amazing food & drinks + new friends!', location: {lat:38.7229, lng: -9.172}},
+          {title: 'Friday Morning', text1: 'Rio Tejo View | Rent a Bycicle . Docas de Alcântara 1200', text2:'Visit Docas Alcântara, rent a bike and go to Belém!', location: {lat:38.702307, lng: -9.170808}},
+          {title: 'Friday Night', text1: 'Cais de Sodré | Time to Drink and have Fun . Rua Cais de Sodré 85 1125', text2:'Go to a fancy restaurant, have some cocktails and dance!',  location: {lat:38.7064, lng: -9.1431}},
+          {title: 'Saturday Morning', text1: 'Cascais | Get the train and go to the beach . Comboio Estação Cais de Sodré 1100', text2:'Time to relax! Go to Cascais, spend your day there!', location: {lat:38.6979000, lng: -9.4214600}},
+          {title: 'Saturday Night', text1: 'Alfama Neighborhood | Restaurant and Fado . Rua de Alfama 65 1500', text2:'Spend your night at this neighborhood and eat some portuguese food!', location: {lat:38.711703, lng: -9.130251}},
+          {title: 'Sunday', text1: 'Brunch and Miradouro | Miradouro da Graça. 1400', text2:'Last day, have some brunch, buy some extra pastel de Nata and enjoy the Miradouro!', location: {lat:38.716130, lng: -9.131497}}
+        ];
+
+
         var largeInfoWindow = new google.maps.InfoWindow();
+
+        // Initialize the drawing manager.
+        var drawingManager = new google.maps.drawing.DrawingManager({
+          drawingMode: google.maps.drawing.OverlayType.POLYGON,
+          drawingControl: true,
+          drawingControlOptions: {
+            position: google.maps.ControlPosition.TOP_LEFT,
+            drawingModes: [
+              google.maps.drawing.OverlayType.POLYGON
+            ]
+          }
+        });
+
+
+        // marcadadore estilizados
+        var defaultIcon = makeMarkerIcon('993366');
+        //var defaultIcon = makeMarkerIcon('0091ff');
+        // hightlight icon quando o mouse passa por cima
+        var highlightedIcon = makeMarkerIcon('f7786b');
+        //var highlightedIcon = makeMarkerIcon('FFFF24');
+
+
 
         for (var i = 0; i < locations.length; i++) {
             // get index postition from each
@@ -45,12 +107,15 @@
             // get index title from each
             var title = locations[i].title;
             // get index text from each
-            var text = locations[i].text;
+            var text1 = locations[i].text1;
+            var text2 = locations[i].text2;
             // make marker from each
             var marker = new google.maps.Marker({
               position: position,
               title: title,
-              text: text,
+              text1: text1,
+              text2: text2,
+              icon: defaultIcon,
               animation: google.maps.Animation.DROP,
               id: i
             });
@@ -63,12 +128,59 @@
             marker.addListener('click',function(){
               populateInfoWindow(this, largeInfoWindow);
             });
-          }
+            // adding 2 event listeners : mouseover and mouseout so
+            // they can change the colors, according to my default and hightlight icon
+            /*marker.addListener('mouseover', function() {
+              this.setIcon(hightlightIcon);
+            });
+            marker.addListener('mouseout', function(){
+              this.setIcon(defaultIcon);
+            });*/
 
+            marker.addListener('mouseover', function() {
+              this.setIcon(highlightedIcon);
+            });
+            marker.addListener('mouseout', function() {
+              this.setIcon(defaultIcon);
+            });
+
+          }
 
         document.getElementById('showListings').addEventListener('click', showListings);
         document.getElementById('hideListings').addEventListener('click', hideListings);
+
+        document.getElementById('toggle-drawing').addEventListener('click', function() {
+          toggleDrawing(drawingManager);
+        });
+
+        // Add an event listener so that the polygon is captured,  call the
+        // searchWithinPolygon function. This will show the markers in the polygon,
+        // and hide any outside of it.
+        drawingManager.addListener('overlaycomplete', function(event) {
+          // First, check if there is an existing polygon.
+          // If there is, get rid of it and remove the markers
+          if (polygon) {
+            polygon.setMap(null);
+            hideListings(markers);
+          }
+          // Switching the drawing mode to the HAND (i.e., no longer drawing).
+          drawingManager.setDrawingMode(null);
+          // Creating a new editable polygon from the overlay.
+          polygon = event.overlay;
+          polygon.setEditable(true);
+          // Searching within the polygon.
+          searchWithinPolygon();
+          // Make sure the search is re-done if the poly is changed.
+          polygon.getPath().addListener('set_at', searchWithinPolygon);
+          polygon.getPath().addListener('insert_at', searchWithinPolygon);
+        });
       }
+
+
+
+
+
+
         /* A novidade aqui o populate window. Ou seja,  quando temos um array de markers a
         melhor coisa a fazer e implementar tudo isso de uma vez através de uma função ( como parametros
       será o marker e o infoWindow)
@@ -77,14 +189,44 @@
         // se infoWindow.marker != marker is not already opened on this marker, then.
         if (infowindow.marker != marker) {
           infowindow.marker = marker;
-          infowindow.setContent('<div>' + marker.title + '<p>' + marker.text + '</p></div>');
-          //infowindow.setContent('<p>' + marker.text + '</p>');
-          infowindow.open(map, marker);
+          infowindow.setContent('<div><h3>' + marker.title + '</h3><span>' + marker.text1 + '</span><p>' + marker.text2 + '<p></div>');
+          //infowindow.open(map, marker);
           infowindow.addListener('closeclick', function() {
-            infowindow.setMarker(null);
+            infowindow.marker = null;
           });
+          // street view,  colocamos um raio de 50 pq se não houver imagem específica ele mostra num raio de 50
+          var streetViewService = new google.maps.StreetViewService();
+          var radius = 50;
+
+          function getStreetView(data, status) {
+            if(status == google.maps.StreetViewStatus.OK) {
+              var nearStreetViewLocation = data.location.latlng;
+              var heading = google.maps.geometry.spherical.computeHeading(
+                nearStreetViewLocation, marker.position);
+                infowindow.setContent('<div' + marker.title + '</div><div id="pano"></div>');
+                var panoramaOptions = {
+                  position: nearStreetViewLocation,
+                  pov: {
+                    heading: heading,
+                    pitch: 30,
+                  }
+                };
+              var panorama = new google.maps.StreetViewPanorama(
+                document.getElementById('pano'), panoramaOptions);
+            } else {
+              infowindow.setContent('<div>' + marker.title + '</div>' + '<div> No street View Found</div>');
+            }
+          }
+          // Use streetview service to get the closest streetview image within
+          // 50 meters of the markers position
+        streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
+          // Open the infowindow on the correct marker.
+        infowindow.open(map, marker);
         }
       }
+
+
+
 
       function showListings(){
         // to adjust everything on the view
@@ -105,9 +247,61 @@
         }
       }
 
+
+      /*function makeMarkerIcon(markerColor) {
+        var markerImage = new google.maps.MarkerImage(
+          '"http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|"'+ markerColor +
+          '|40|_|%E2%80%A2',
+          new google.maps.Size(21, 34),
+          new google.maps.Point(0, 0),
+          new google.maps.Point(10, 34),
+          new google.maps.Size(21,34));
+        return markerImage;
+      }*/
+
+
+      function makeMarkerIcon(markerColor) {
+        var markerImage = new google.maps.MarkerImage(
+          'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ markerColor +
+          '|40|_|%E2%80%A2',
+          new google.maps.Size(21, 34),
+          new google.maps.Point(0, 0),
+          new google.maps.Point(10, 34),
+          new google.maps.Size(21,34));
+        return markerImage;
+      }
+
+      //show and hide the drawing options
+      function toggleDrawing(drawingManager) {
+        if (drawingManager.map) {
+          drawingManager.setMap(null);
+          // In case the user drew anything, get rid of the polygon
+          if (polygon !== null) {
+            polygon.setMap(null);
+          }
+        } else {
+          drawingManager.setMap(map);
+        }
+      }
+
+      // This function hides all markers outside the polygon,
+      // and shows only the ones within it. This is so that the
+      // user can specify an exact area of search.
+      function searchWithinPolygon() {
+        for (var i = 0; i < markers.length; i++) {
+          if (google.maps.geometry.poly.containsLocation(markers[i].position, polygon)) {
+            markers[i].setMap(map);
+          } else {
+            markers[i].setMap(null);
+          }
+        }
+      }
+
+
   </script>
     <script async defer
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA0dcuJyRJYeOl5CqAerCyoi1hkitGF3HY&callback=initMap" type="text/javascript"></script>
-    </script>
+    src=
+    "https://maps.googleapis.com/maps/api/js?libraries=geometry,drawing&key=AIzaSyA0dcuJyRJYeOl5CqAerCyoi1hkitGF3HY&v=3&callback=initMap">
+  </script>
   </body>
 </html>
